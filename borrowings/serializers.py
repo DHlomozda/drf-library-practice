@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from borrowings.models import Borrowing
-from books.serializers import BookSerializer
+from books.serializers import BookReadSerializer
 
 
 class BorrowingReadSerializer(serializers.ModelSerializer):
-    book = BookSerializer(read_only=True)
+    book = BookReadSerializer(read_only=True)
 
     class Meta:
         model = Borrowing
