@@ -135,7 +135,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {"anon": "500/day", "user": "500/day"},
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-
+      
         # we can leave it while in develop
         "rest_framework.authentication.SessionAuthentication",
     ),
