@@ -7,16 +7,17 @@ from django.utils.translation import gettext_lazy as _
 class Borrowing(models.Model):
     borrow_date = models.DateTimeField(auto_now_add=True)
     expected_return_date = models.DateTimeField()
-    actual_return_date = models.DateTimeField(auto_now_add=True)
+    actual_return_date = models.DateTimeField(null=True, blank=True)
     book = models.ForeignKey("books.Book", on_delete=models.CASCADE, related_name="borrowings")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="borrowings")
 
     def clean(self):
-        if self.expected_return_date <= self.borrow_date:
-            raise ValidationError(_("Expected return date must be after borrow date."))
+        if self.borrow_date is not None:
+            if self.expected_return_date <= self.borrow_date:
+                raise ValidationError(_("Expected return date must be after borrow date."))
 
-        if self.actual_return_date and self.actual_return_date < self.borrow_date:
-            raise ValidationError(_("Actual return date cannot be before borrow date."))
+            if self.actual_return_date and self.actual_return_date < self.borrow_date:
+                raise ValidationError(_("Actual return date cannot be before borrow date."))
 
     def save(self, *args, **kwargs):
         self.clean()
