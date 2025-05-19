@@ -1,13 +1,14 @@
-from rest_framework import viewsets
-
 from books.models import Book
 from books.serializers import BookReadSerializer, BookCreateSerializer
+from books.utils.mixins import ActionMixin
 
 
-class BookViewSet(viewsets.ModelViewSet):
+class BookViewSet(ActionMixin):
     queryset = Book.objects.all()
-
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return BookReadSerializer
-        return BookCreateSerializer
+    action_serializers = {
+        "list": BookReadSerializer,
+        "retrieve": BookReadSerializer,
+        "create": BookCreateSerializer,
+        "update": BookCreateSerializer,
+        "partial_update": BookCreateSerializer,
+    }
