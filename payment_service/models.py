@@ -1,21 +1,6 @@
 from django.db import models
-from django.conf import settings
 from decimal import Decimal
-
-
-class Borrowing(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
-    book = models.ForeignKey(
-        "Book",
-        on_delete=models.CASCADE
-    )
-    total_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2
-    )
+from borrowings.models import Borrowing
 
 
 class Payment(models.Model):

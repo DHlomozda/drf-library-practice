@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-
-    "payment_service"
+    # Our apps
+    "payment_service",
     "rest_framework",
     "books",
     "user",
