@@ -1,0 +1,84 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app  # hot reload
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  bot:
+    build:
+      context: .
+#    command: python manage.py run_tg_bot # command for running bot
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+      - db
+    restart: always
+
+  db:
+    image: postgres:15
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 8s
+      timeout: 3s
+      retries: 6
+
+  redis:
+#    image: redis:7-alpine
+    image: redis:7
+    ports:
+      - "6379:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 8s
+      timeout: 3s
+      retries: 6
+
+#  # if we're using Celery
+#  worker:
+#    build:
+#      context: .
+#    command: celery -A library_service worker -l info
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#      - db
+#    restart: always
+#
+#  # if we're using qcluster
+#  qcluster:
+#    build:
+#      context: .
+#    command: python manage.py qcluster
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#      - db
+#    restart: always
+
+volumes:
+  postgres_data:

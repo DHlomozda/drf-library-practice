@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+.git
+.gitignore
+
+.idea/
+.vscode/
+*.swp
+
+*.log
+
+tests/
+docs/
