@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Borrowing
+from borrowings.models import Borrowing
 from books.serializers import BookSerializer
 
 
