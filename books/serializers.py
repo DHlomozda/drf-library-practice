@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
+from django.core.exceptions import ValidationError
 from books.models import Book
 
 
@@ -43,7 +43,7 @@ class BookReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ("id", "title", "author", "cover", "inventory", "daily_fee", "daily_fee")
+        fields = ("id", "title", "author", "cover", "inventory", "daily_fee")
 
     def get_daily_fee(self, obj):
         return f"${obj.daily_fee}"
