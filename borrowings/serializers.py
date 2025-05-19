@@ -15,3 +15,27 @@ class BorrowingReadSerializer(serializers.ModelSerializer):
             "actual_return_date",
             "book",
         )
+
+
+class BorrowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = ["book", "expected_return_date"]
+
+    def validate(self, data):
+        book = data.get("book")
+        if book.inventory <= 0:
+            raise serializers.ValidationError("Sorry, this book is currently out of stock")
+        return data
+
+    def create(self, validated_data):
+        book = validated_data.get("book")
+        book.inventory -= 1
+        book.save()
+
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            raise serializers.ValidationError("You must log in to proceed")
+
+        borrowing = Borrowing.objects.create(user=user, **validated_data)
+        return borrowing
