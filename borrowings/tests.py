@@ -13,6 +13,7 @@ from django.utils import translation
 
 User = get_user_model()
 
+
 class BorrowingModelTest(TestCase):
     def setUp(self):
         translation.activate('en-us')
@@ -56,6 +57,7 @@ class BorrowingModelTest(TestCase):
         )
         expected_str = f"{self.user.email} borrowed {self.book.title} on {borrowing.borrow_date}"
         self.assertEqual(str(borrowing), expected_str)
+
 
 class BorrowingSerializerTest(TestCase):
     def setUp(self):
