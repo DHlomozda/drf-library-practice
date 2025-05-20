@@ -32,5 +32,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         create_stripe_checkout_session(
             borrowing=borrowing,
             amount=amount,
-            payment_type="PAYMENT"
+            payment_type="PAYMENT",
+            request=self.request
         )
