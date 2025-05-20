@@ -1,14 +1,36 @@
 __pycache__/
 *.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+staticfiles/
+media/
+db.sqlite3
 
 .git
 .gitignore
 
+.env
+.venv/
+env/
+venv/
 .idea/
 .vscode/
 *.swp
 
+.DS_Store
+Thumbs.db
+
+dist/
+build/
 *.log
 
 tests/
 docs/
+
+Dockerfile
+.dockerignore

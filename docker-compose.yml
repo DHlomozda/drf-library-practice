@@ -5,9 +5,11 @@ services:
       dockerfile: Dockerfile
     command: >
       sh -c "python manage.py migrate &&
-            python manage.py runserver 0.0.0.0:8000"
+            python manage.py collectstatic --noinput &&
+            gunicorn library_service.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app  # hot reload
+      - static_volume:/app/static
     env_file:
       - .env
     ports:
@@ -20,7 +22,7 @@ services:
   bot:
     build:
       context: .
-#    command: python manage.py run_tg_bot # command for running bot
+    command: python -m telegram_bot.polling_bot
     volumes:
       - .:/app
     depends_on:
@@ -39,13 +41,12 @@ services:
       - "5432:5432"
     restart: always
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 8s
       timeout: 3s
       retries: 6
 
   redis:
-#    image: redis:7-alpine
     image: redis:7
     ports:
       - "6379:6379"
@@ -56,29 +57,35 @@ services:
       timeout: 3s
       retries: 6
 
-#  # if we're using Celery
-#  worker:
-#    build:
-#      context: .
-#    command: celery -A library_service worker -l info
-#    volumes:
-#      - .:/app
-#    depends_on:
-#      - redis
-#      - db
-#    restart: always
-#
-#  # if we're using qcluster
-#  qcluster:
-#    build:
-#      context: .
-#    command: python manage.py qcluster
-#    volumes:
-#      - .:/app
-#    depends_on:
-#      - redis
-#      - db
-#    restart: always
+  celery:
+    build:
+      context: .
+    command: celery -A library_service worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  beat:
+    build:
+      context: .
+    command: >
+      sh -c "echo 'Waiting for ending of migrations...' &&
+              sleep 5 &&
+              celery -A library_service beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
 
 volumes:
   postgres_data:
+  static_volume:

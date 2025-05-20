@@ -43,3 +43,7 @@ vol/
 .env.sample
 .env.sample
 !.env.sample
+.env
+
+
+/staticfiles/
