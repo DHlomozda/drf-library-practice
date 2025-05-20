@@ -47,16 +47,20 @@ ________________
 
 ## 🛠️ Tech Stack
 
-| Technology          | Description                    |
-|---------------------|--------------------------------|
-| 🐍 Python 3.11+     | Backend language               |
-| 🌐 Django 5.2       | Web framework                  |
-| 🧱 Django REST      | API creation                   |
-| 🐘 PostgreSQL       | Database                       |
-| 🎯 Celery & Redis   | Background tasks & scheduling  |
-| 💳 Stripe API       | Payment processing             |
-| 🤖 Telegram Bot API | Notification system            |
-| 🔑 JWT Auth         | Authentication method          |
+<div align="center">
+
+| Technology          | Description                   |
+|---------------------|------------------------------|
+| 🐍 Python 3.11+     | Backend language             |
+| 🌐 Django 5.2       | Web framework                |
+| 🧱 Django REST      | API creation                 |
+| 🐘 PostgreSQL       | Database                     |
+| 🎯 Celery & Redis   | Background tasks & scheduling|
+| 💳 Stripe API       | Payment processing           |
+| 🤖 Telegram Bot API | Notification system          |
+| 🔑 JWT Auth         | Authentication method        |
+
+</div>
 ________________
 ##  📊 Model diagram
 ![Untitled](https://github.com/user-attachments/assets/cdc6d0b1-0f4c-4642-93e1-135e41f1eae1)
