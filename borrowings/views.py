@@ -72,6 +72,10 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         borrowing = serializer.save(user=self.request.user)
         
+        book = borrowing.book
+        book.inventory -= 1
+        book.save()
+        
         days_rented = (borrowing.expected_return_date - borrowing.borrow_date).days
         if days_rented <= 0:
             days_rented = 1
