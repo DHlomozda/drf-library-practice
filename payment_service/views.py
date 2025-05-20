@@ -116,6 +116,8 @@ class PaymentCancelView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StripeWebhookView(APIView):
+    permission_classes = []
+
     def post(self, request):
         payload = request.body
         sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
