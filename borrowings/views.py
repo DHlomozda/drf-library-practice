@@ -90,7 +90,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             request=self.request
         )
 
-        # Отправляем уведомление в Telegram
         message = (
             f"📚 <b>New Borrowing Created</b>\n"
             f"👤 User: {borrowing.user.email}\n"
