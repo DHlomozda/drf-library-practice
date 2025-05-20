@@ -83,7 +83,7 @@ def create_stripe_checkout_session(
             success_url=success_url,
             cancel_url=cancel_url,
             customer_email=user_email,
-            expires_at=int((datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()),
+            expires_at=int((datetime.now(timezone.utc) + timedelta(hours=23)).timestamp()),
         )
 
         payment.session_id = session.id
