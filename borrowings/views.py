@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime, timezone
+from django.conf import settings
 
 from borrowings.models import Borrowing
 from borrowings.serializers import (
@@ -112,6 +113,18 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             )
         
         borrowing.actual_return_date = datetime.now(timezone.utc)
+        
+        # Проверка на просрочку
+        if borrowing.actual_return_date > borrowing.expected_return_date:
+            days_overdue = (borrowing.actual_return_date - borrowing.expected_return_date).days
+            fine_amount = days_overdue * borrowing.book.daily_fee * settings.FINE_MULTIPLIER
+            
+            create_stripe_checkout_session(
+                borrowing=borrowing,
+                amount=fine_amount,
+                payment_type="FINE",
+                request=request
+            )
         
         book = borrowing.book
         book.inventory += 1
