@@ -36,3 +36,11 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
                 "Expected return date must be in the future."
             )
         return value
+
+    def validate(self, attrs):
+        book = attrs.get("book")
+        if book.inventory <= 0:
+            raise serializers.ValidationError({
+                'book': "Sorry, the book is currently unavailable for borrowing"
+            })
+        return attrs

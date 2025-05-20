@@ -15,7 +15,7 @@ class Book(models.Model):
     daily_fee = models.DecimalField(max_digits=5, decimal_places=2)
 
     def clean(self):
-        if self.inventory <= 0:
+        if self.inventory < 0:
             raise ValidationError(
                 {"inventory": "Inventory must be a positive number."}
             )
