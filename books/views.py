@@ -1,4 +1,5 @@
 from books.models import Book
+from books.permissions import IsAdminOrReadOnly
 from books.serializers import BookReadSerializer, BookCreateSerializer
 from books.utils.mixins import ActionMixin
 
@@ -12,3 +13,4 @@ class BookViewSet(ActionMixin):
         "update": BookCreateSerializer,
         "partial_update": BookCreateSerializer,
     }
+    permission_classes = [IsAdminOrReadOnly]
