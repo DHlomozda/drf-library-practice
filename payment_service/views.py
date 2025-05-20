@@ -1,4 +1,5 @@
 import stripe
+from datetime import datetime, timezone
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
@@ -39,7 +40,26 @@ class StartPaymentView(APIView):
         if borrowing.user != request.user and not request.user.is_staff:
             return Response({"detail": "Not allowed."}, status=403)
 
-        amount = borrowing.book.daily_fee * 5
+        existing_payment = Payment.objects.filter(
+            borrowing=borrowing,
+            status=Payment.Status.PENDING,
+            type=Payment.Type.PAYMENT
+        ).first()
+
+        if existing_payment:
+            return Response({
+                "payment_id": existing_payment.id,
+                "checkout_url": existing_payment.session_url
+            }, status=201)
+
+        end_date = borrowing.actual_return_date or datetime.now(timezone.utc)
+
+        days_rented = (end_date - borrowing.borrow_date).days
+        if days_rented <= 0:
+            days_rented = 1
+
+        amount = borrowing.book.daily_fee * days_rented
+
         payment = create_stripe_checkout_session(
             borrowing=borrowing,
             amount=amount,
