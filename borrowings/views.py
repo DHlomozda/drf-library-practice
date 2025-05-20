@@ -15,13 +15,23 @@ from payment_service.stripe_service import create_stripe_checkout_session
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.select_related("book", "user")
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == "create":
             return BorrowingCreateSerializer
         return BorrowingReadSerializer
 
-    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset
+        user_id = self.request.query_params.get("user_id")
+        is_active = self.request.query_params.get("is_active")
+        if user.is_staff:
+            queryset = queryset.filter(user_id=user_id) if user_id else queryset
+        if is_active and is_active.lower() == "true":
+            queryset = queryset.filter(actual_return_date__isnull=True)
+        return queryset if user.is_staff else queryset.filter(user=user)
 
     def perform_create(self, serializer):
         borrowing = serializer.save(user=self.request.user)
