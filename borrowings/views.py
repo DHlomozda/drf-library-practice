@@ -1,5 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 from datetime import datetime, timezone
 
 from borrowings.models import Borrowing
@@ -44,4 +47,27 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             amount=amount,
             payment_type="PAYMENT",
             request=self.request
+        )
+
+    @action(detail=True, methods=["post"])
+    def return_book(self, request, pk=None):
+        borrowing = self.get_object()
+        
+        if borrowing.actual_return_date:
+            return Response(
+                {"error": "This book has already been returned."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        borrowing.actual_return_date = datetime.now(timezone.utc)
+        
+        book = borrowing.book
+        book.inventory += 1
+        book.save()
+        
+        borrowing.save()
+        
+        return Response(
+            {"message": "Book has been successfully returned."},
+            status=status.HTTP_200_OK
         )
