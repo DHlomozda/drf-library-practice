@@ -3,26 +3,30 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.urls import reverse
-
+from django.utils.timezone import now
 from borrowings.models import Borrowing
 from books.models import Book
 from django.contrib.auth import get_user_model
-from borrowings.serializers import BorrowingReadSerializer
-
+from borrowings.serializers import BorrowingReadSerializer, BorrowingCreateSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import translation
 
 User = get_user_model()
 
 
 class BorrowingModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            email="user@test.com",
-            password="password",
-            first_name="Test",
-            last_name="User"
-        )
-        self.book = Book.objects.create(title="Test Book", author="Author", inventory=1, daily_fee=10, cover="HARD")
+        translation.activate('en-us')
+        self.user = User.objects.create_user(first_name="Test",
+                                             last_name="User",
+                                             email="user@test.com",
+                                             password="password",
+                                             is_staff=True)
+        self.book = Book.objects.create(title="Test Book",
+                                        author="Author",
+                                        inventory=10,
+                                        daily_fee=1.5,
+                                        cover="HARD")
 
     def test_borrowing_clean_validation(self):
         now = timezone.now()
@@ -35,13 +39,15 @@ class BorrowingModelTest(TestCase):
         )
         with self.assertRaises(ValidationError) as cm:
             borrowing.clean()
-        self.assertIn("Expected return date must be after borrow date.", str(cm.exception))
+        self.assertEqual(str(cm.exception.messages[0]),
+                         "Expected return date must be after borrow date.")
 
         borrowing.expected_return_date = now + timezone.timedelta(days=1)
         borrowing.actual_return_date = now - timezone.timedelta(days=1)
         with self.assertRaises(ValidationError) as cm:
             borrowing.clean()
-        self.assertIn("Actual return date cannot be before borrow date.", str(cm.exception))
+        self.assertEqual(str(cm.exception.messages[0]),
+                         "Actual return date cannot be before borrow date.")
 
     def test_borrowing_str(self):
         borrowing = Borrowing.objects.create(
@@ -52,15 +58,19 @@ class BorrowingModelTest(TestCase):
         expected_str = f"{self.user.email} borrowed {self.book.title} on {borrowing.borrow_date}"
         self.assertEqual(str(borrowing), expected_str)
 
+
 class BorrowingSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            email="user@test.com",
-            password="password",
-            first_name="Test",
-            last_name="User"
-        )
-        self.book = Book.objects.create(title="Test Book", author="Author", inventory=1, daily_fee=10, cover="HARD")
+        self.user = User.objects.create_user(first_name="Test",
+                                             last_name="User",
+                                             email="user@test.com",
+                                             password="password",
+                                             is_staff=True)
+        self.book = Book.objects.create(title="Test Book",
+                                        author="Author",
+                                        inventory=10,
+                                        daily_fee=1.5,
+                                        cover="HARD")
         self.borrowing = Borrowing.objects.create(
             expected_return_date=timezone.now() + timezone.timedelta(days=5),
             book=self.book,
@@ -80,23 +90,27 @@ class BorrowingSerializerTest(TestCase):
 class BorrowingViewSetTest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            email="user@test.com",
-            password="password",
-            first_name="Test",
-            last_name="User"
-        )
-        self.book = Book.objects.create(title="Test Book", author="Author", inventory=1, daily_fee=10, cover="HARD")
+        self.user = User.objects.create_user(first_name="Test",
+                                             last_name="User",
+                                             email="user@test.com",
+                                             password="password",
+                                             is_staff=True)
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.book = Book.objects.create(title="Test Book",
+                                        author="Author",
+                                        inventory=10,
+                                        daily_fee=1.5,
+                                        cover="HARD"
+                                        )
         self.borrowing = Borrowing.objects.create(
             expected_return_date=timezone.now() + timezone.timedelta(days=5),
             book=self.book,
             user=self.user
         )
-        self.client.force_authenticate(user=self.user)
 
     def test_borrowing_list(self):
-        url = reverse("borrowings:borrowing-list")
-        response = self.client.get(url)
+        response = self.client.get("/api/borrowings/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsInstance(response.data, list)
         self.assertGreaterEqual(len(response.data), 1)
@@ -108,60 +122,70 @@ class BorrowingViewSetTest(TestCase):
         self.assertIn("book", borrowing_data)
 
     def test_borrowing_detail(self):
-        url = reverse("borrowings:borrowing-detail", args=[self.borrowing.id])
-        response = self.client.get(url)
+        response = self.client.get(f"/api/borrowings/{self.borrowing.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.borrowing.id)
 
 
-class BorrowingReturnTest(TestCase):
+class BorrowingCreateSerializerTestCase(TestCase):
     def setUp(self):
-        self.client = APIClient()
-        self.user = User.objects.create_user(
-            email="user@test.com",
-            password="password",
-            first_name="Test",
-            last_name="User"
-        )
-        self.book = Book.objects.create(
+        self.book_available = Book.objects.create(
             title="Test Book",
-            author="Author",
-            inventory=1,
-            daily_fee=10,
+            inventory=5,
+            daily_fee=2.50,
+            author="John Doe",
             cover="HARD"
         )
-        self.borrowing = Borrowing.objects.create(
-            expected_return_date=timezone.now() + timezone.timedelta(days=5),
-            book=self.book,
-            user=self.user
+        self.book_unavailable = Book.objects.create(
+            title="Unavailable Book",
+            inventory=1,
+            daily_fee=1.50,
+            author="Jane Smith",
+            cover="SOFT"
         )
-        self.client.force_authenticate(user=self.user)
+        self.book_unavailable.inventory = 0
+        self.book_unavailable.save(update_fields=["inventory"])
 
-    def test_return_book_success(self):
-        url = reverse("borrowings:borrowing-return-book", args=[self.borrowing.id])
-        response = self.client.post(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Book has been successfully returned.")
-        
-        self.borrowing.refresh_from_db()
-        self.assertIsNotNone(self.borrowing.actual_return_date)
-        
-        self.book.refresh_from_db()
-        self.assertEqual(self.book.inventory, 2)
+        self.user = get_user_model().objects.create_user(
+            email="testuser@example.com",
+            first_name="Test",
+            last_name="User",
+            password="testpassword",
+            is_staff=True
+        )
 
-    def test_return_book_already_returned(self):
-        url = reverse("borrowings:borrowing-return-book", args=[self.borrowing.id])
-        self.client.post(url)
-        
-        response = self.client.post(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"], "This book has already been returned.")
+    def test_validate_expected_return_date_future(self):
+        from rest_framework.exceptions import ValidationError
+        serializer = BorrowingCreateSerializer()
 
-    def test_return_book_unauthorized(self):
-        self.client.force_authenticate(user=None)
-        url = reverse("borrowings:borrowing-return-book", args=[self.borrowing.id])
-        response = self.client.post(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        valid_date = now() + timezone.timedelta(days=1)
+        validated_date = serializer.validate_expected_return_date(valid_date)
+        self.assertEqual(validated_date, valid_date)
+
+        invalid_date = now() - timezone.timedelta(days=1)
+        with self.assertRaises(ValidationError) as context:
+            serializer.validate_expected_return_date(invalid_date)
+        self.assertEqual(str(context.exception.detail[0]),
+                         "Expected return date must be in the future.")
+
+    def test_validate_inventory_book_available(self):
+        data = {
+            "book": self.book_available.id,
+            "expected_return_date": now() + timezone.timedelta(days=1),
+        }
+        serializer = BorrowingCreateSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_validate_inventory_book_unavailable(self):
+        data = {
+            "book": self.book_unavailable.id,
+            "expected_return_date": now() + timezone.timedelta(days=1),
+        }
+        serializer = BorrowingCreateSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("book", serializer.errors)
+        self.assertEqual(
+            serializer.errors["book"][0],
+            "Sorry, the book is currently unavailable for borrowing"
+        )

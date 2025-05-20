@@ -55,7 +55,7 @@ class BookTests(BaseApiTestCase):
         res = self.client.post(BOOKS_URL, payload)
 
         self.assertEqual(Book.objects.count(), 0)
-        self.assertEquals(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_forbidden_update_book(self):
         book = sample_book()
