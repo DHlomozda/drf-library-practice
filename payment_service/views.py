@@ -16,11 +16,28 @@ from payment_service.serializers import PaymentSerializer
 from payment_service.permissions import IsOwnerOrAdmin
 from payment_service.stripe_service import create_stripe_checkout_session, StripeSessionError
 
+from payment_service.schema_descriptions import (
+    payment_list_schema,
+    payment_retrieve_schema,
+    start_payment_schema,
+    payment_success_schema,
+    payment_cancel_schema,
+    stripe_webhook_schema,
+)
+
 
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [IsOwnerOrAdmin]
+
+    @payment_list_schema
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @payment_retrieve_schema
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
@@ -34,6 +51,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
 class StartPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @start_payment_schema
     def post(self, request, borrowing_id):
         borrowing = get_object_or_404(Borrowing, id=borrowing_id)
 
@@ -79,9 +97,10 @@ class StartPaymentView(APIView):
 class PaymentSuccessView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @payment_success_schema
     def get(self, request, payment_id):
         payment = get_object_or_404(Payment, id=payment_id)
-        
+
         if payment.borrowing.user != request.user and not request.user.is_staff:
             return Response({"detail": "Not allowed."}, status=403)
 
@@ -106,6 +125,7 @@ class PaymentSuccessView(APIView):
 class PaymentCancelView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @payment_cancel_schema
     def get(self, request):
         return Response({
             "status": "cancelled",
@@ -118,6 +138,7 @@ class PaymentCancelView(APIView):
 class StripeWebhookView(APIView):
     permission_classes = []
 
+    @stripe_webhook_schema
     def post(self, request):
         payload = request.body
         sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
