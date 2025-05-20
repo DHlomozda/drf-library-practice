@@ -20,6 +20,7 @@ from borrowings.schema_descriptions import (
     borrowing_return_schema,
 )
 from payment_service.stripe_service import create_stripe_checkout_session
+from telegram_bot.telegram import send_telegram_message
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
@@ -88,6 +89,17 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             payment_type="PAYMENT",
             request=self.request
         )
+
+        # Отправляем уведомление в Telegram
+        message = (
+            f"📚 <b>New Borrowing Created</b>\n"
+            f"👤 User: {borrowing.user.email}\n"
+            f"📖 Book: {borrowing.book.title}\n"
+            f"📅 Borrow Date: {borrowing.borrow_date.strftime('%Y-%m-%d %H:%M')}\n"
+            f"📅 Expected Return: {borrowing.expected_return_date.strftime('%Y-%m-%d %H:%M')}\n"
+            f"💰 Amount: ${amount:.2f}"
+        )
+        send_telegram_message(message)
 
     @borrowing_return_schema
     @action(detail=True, methods=["post"])
