@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     # Our apps
+    "django_celery_beat",
     "payment_service",
     "rest_framework",
     "books",
@@ -161,3 +162,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": False,
 }
+CELERY_BROKER_URL = (os.environ.get("CELERY_BROKER_URL"),)
+CELERY_RESULT_BACKEND = (os.environ.get("CELERY_RESULT_BACKEND"),)
+CELERY_TIMEZONE = "Europe/Kyiv"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
