@@ -15,3 +15,21 @@ class BorrowingReadSerializer(serializers.ModelSerializer):
             "actual_return_date",
             "book",
         )
+
+
+class BorrowingCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = (
+            "id",
+            "expected_return_date",
+            "book",
+        )
+
+    def validate_expected_return_date(self, value):
+        from django.utils.timezone import now
+        if value <= now():
+            raise serializers.ValidationError(
+                "Expected return date must be in the future."
+            )
+        return value
