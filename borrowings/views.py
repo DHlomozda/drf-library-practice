@@ -10,11 +10,44 @@ from borrowings.serializers import (
     BorrowingReadSerializer,
     BorrowingCreateSerializer
 )
+from borrowings.schema_descriptions import (
+    borrowing_list_schema,
+    borrowing_retrieve_schema,
+    borrowing_create_schema,
+    borrowing_update_schema,
+    borrowing_partial_update_schema,
+    borrowing_destroy_schema,
+    borrowing_return_schema,
+)
 from payment_service.stripe_service import create_stripe_checkout_session
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+
+    @borrowing_list_schema
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @borrowing_retrieve_schema
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @borrowing_create_schema
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @borrowing_update_schema
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @borrowing_partial_update_schema
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @borrowing_destroy_schema
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -52,6 +85,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             request=self.request
         )
 
+    @borrowing_return_schema
     @action(detail=True, methods=["post"])
     def return_book(self, request, pk=None):
         borrowing = self.get_object()
