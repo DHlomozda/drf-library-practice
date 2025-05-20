@@ -61,7 +61,6 @@ ________________
 | 🔑 JWT Auth         | Authentication method        |
 
 </div>
-___________________
 
 ##  📊 Model diagram
 
