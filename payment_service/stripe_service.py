@@ -48,19 +48,17 @@ def create_stripe_checkout_session(
     if not user_email:
         raise ValidationError("User email is required for creating payment session")
 
-    # Create payment first to get its ID
     try:
         payment = Payment.objects.create(
             borrowing=borrowing,
-            session_id="",  # Will be updated after session creation
-            session_url="",  # Will be updated after session creation
+            session_id="",
+            session_url="",
             money_to_pay=amount,
             type=payment_type
         )
     except Exception as e:
         raise StripeSessionError(f"Failed to create payment record: {str(e)}")
 
-    # Build success and cancel URLs
     success_url = request.build_absolute_uri(
         reverse('payment-success', kwargs={'payment_id': payment.id})
     )
@@ -88,7 +86,6 @@ def create_stripe_checkout_session(
             expires_at=int((datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()),
         )
 
-        # Update payment with session details
         payment.session_id = session.id
         payment.session_url = session.url
         payment.save()
