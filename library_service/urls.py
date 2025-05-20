@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/books/", include("books.urls", namespace="books")),
     path("api/borrowings/", include("borrowings.urls", namespace="borrowings")),
     path("api/payments/", include("payment_service.urls")),
+    path("api/telegram/", include("telegram_bot.urls", namespace="telegram_bot")),
 ]
