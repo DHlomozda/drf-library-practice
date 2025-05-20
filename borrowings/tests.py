@@ -10,7 +10,9 @@ from books.models import Book
 from django.contrib.auth import get_user_model
 from borrowings.serializers import BorrowingReadSerializer
 
+
 User = get_user_model()
+
 
 class BorrowingModelTest(TestCase):
     def setUp(self):
