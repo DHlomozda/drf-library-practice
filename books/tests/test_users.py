@@ -35,7 +35,7 @@ class BookTests(BaseApiTestCase):
 
         self.assertEqual(len(res_list.data), 2)
         self.assertEqual(res_list.status_code, status.HTTP_200_OK)
-        self.assertEquals(res_list.data, serializer_list.data)
+        self.assertEqual(res_list.data, serializer_list.data)
 
     def test_detail_books(self):
         book = sample_book()
@@ -46,8 +46,8 @@ class BookTests(BaseApiTestCase):
         serializer_detail = BookReadSerializer(book)
 
         self.assertTrue(daily_fee.startswith("$"))
-        self.assertEquals(res_detail.status_code, status.HTTP_200_OK)
-        self.assertEquals(res_detail.data, serializer_detail.data)
+        self.assertEqual(res_detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_detail.data, serializer_detail.data)
 
     def test_forbidden_create_book(self):
         payload = sample_book_payload()
