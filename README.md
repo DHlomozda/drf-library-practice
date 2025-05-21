@@ -218,6 +218,9 @@ The library service includes a Telegram bot that provides real-time notification
 ```
 TELEGRAM_BOT_TOKEN=your_bot_token
 TELEGRAM_CHAT_ID=your_chat_id
+CHAT_ID=your_chat_id
+TELEGRAM_GROUP_INVITE_LINK=your_group_invite
+TELEGRAM_WEBHOOK_URL=your_tg_webhook_url
 ```
 
 ### Usage
