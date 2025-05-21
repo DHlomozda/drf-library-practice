@@ -1,10 +1,12 @@
 import stripe
 from datetime import datetime, timezone
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -32,6 +34,10 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [IsOwnerOrAdmin]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ["status", "id"]
+    search_fields =  ["status", "id"]
 
     @payment_list_schema
     def list(self, request, *args, **kwargs):
