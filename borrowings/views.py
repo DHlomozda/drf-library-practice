@@ -56,11 +56,19 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return Borrowing.objects.none()
+        queryset = self.queryset
+        user_id = self.request.query_params.get("user_id")
+        is_active = self.request.query_params.get("is_active")
+
+        queryset = Borrowing.objects.select_related("book", "user")
+
         if user.is_staff:
-            return Borrowing.objects.all()
-        return Borrowing.objects.filter(user=user)
+            queryset = queryset.filter(user_id=user_id) if user_id else queryset
+
+        if is_active and is_active.lower() == "true":
+            queryset = queryset.filter(actual_return_date__isnull=True)
+
+        return queryset if user.is_staff else queryset.filter(user=user)
 
     @borrowing_create_schema
     def create(self, request, *args, **kwargs):
@@ -134,6 +142,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         url_path="return",
         permission_classes=[IsOwnerOrAdmin],
     )
+    @borrowing_return_schema
     def return_book(self, request, pk=None):
         borrowing = self.get_object()
         if borrowing.actual_return_date:
