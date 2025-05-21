@@ -41,7 +41,7 @@ vol/
 
 # dotenv
 .env.sample
-.env.sample
+.env
 !.env.sample
 .env
 

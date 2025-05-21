@@ -9,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from telegram_bot.telegram import send_telegram_message
 
 from borrowings.models import Borrowing
 from payment_service.models import Payment
@@ -23,6 +24,7 @@ from payment_service.schema_descriptions import (
     payment_success_schema,
     payment_cancel_schema,
     stripe_webhook_schema,
+    renew_payment_schema,
 )
 
 
@@ -109,6 +111,16 @@ class PaymentSuccessView(APIView):
             if session.payment_status == 'paid':
                 payment.status = Payment.Status.PAID
                 payment.save()
+                
+                message = (
+                    f"Payment completed successfully!\n"
+                    f"Borrowing ID: #{payment.borrowing.id}\n"
+                    f"Amount: ${payment.money_to_pay}\n"
+                    f"Type: {payment.type}\n"
+                    f"Date: {payment.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+                send_telegram_message(message)
+                
                 return Response({
                     "status": "success",
                     "message": "Payment completed successfully"
@@ -165,3 +177,38 @@ class StripeWebhookView(APIView):
                 return HttpResponse(status=404)
 
         return HttpResponse(status=200)
+
+
+class RenewPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @renew_payment_schema
+    def post(self, request, payment_id):
+        payment = get_object_or_404(Payment, id=payment_id)
+
+        if payment.borrowing.user != request.user and not request.user.is_staff:
+            return Response({"detail": "Not allowed."}, status=403)
+
+        if payment.status != Payment.Status.EXPIRED:
+            return Response(
+                {"detail": "Only expired payments can be renewed."},
+                status=400
+            )
+
+        try:
+            new_payment = create_stripe_checkout_session(
+                borrowing=payment.borrowing,
+                amount=payment.money_to_pay,
+                payment_type=payment.type,
+                request=request
+            )
+
+            payment.status = Payment.Status.EXPIRED
+            payment.save()
+
+            return Response({
+                "payment_id": new_payment.id,
+                "checkout_url": new_payment.session_url
+            }, status=201)
+        except StripeSessionError as e:
+            return Response({"error": str(e)}, status=400)

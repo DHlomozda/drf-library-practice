@@ -37,9 +37,18 @@ borrowing_retrieve_schema = extend_schema(
 
 borrowing_create_schema = extend_schema(
     summary="Create a borrowing",
-    description="Create a new borrowing and initialize Stripe payment session.",
+    description=(
+        "Create a new borrowing and initialize Stripe payment session.\n\n"
+        "Validation rules:\n"
+        "- User cannot have any pending or expired payments\n"
+        "- Book must be available in inventory\n"
+        "- Expected return date must be in the future"
+    ),
     request=BorrowingCreateSerializer,
-    responses={201: BorrowingCreateSerializer},
+    responses={
+        201: BorrowingCreateSerializer,
+        400: OpenApiTypes.OBJECT
+    },
 )
 
 borrowing_update_schema = extend_schema(
