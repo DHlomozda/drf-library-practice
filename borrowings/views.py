@@ -29,14 +29,24 @@ from telegram_bot.telegram import send_telegram_message
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
     @borrowing_list_schema
     def list(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         return super().list(request, *args, **kwargs)
 
     @borrowing_retrieve_schema
     def retrieve(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         return super().retrieve(request, *args, **kwargs)
 
     def get_serializer_class(self):
@@ -54,6 +64,12 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     @borrowing_create_schema
     def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
         pending_payments = Payment.objects.filter(
             borrowing__user=request.user,
             status__in=[Payment.Status.PENDING, Payment.Status.EXPIRED]

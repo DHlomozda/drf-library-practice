@@ -135,8 +135,59 @@ celery -A library_service beat -l info
 _____________________
 ## 🐳 Docker Setup
 
-<!-- 
-TODO: Добавить инструкции по Docker:
+### Prerequisites
+- Docker
+- Docker Compose
 
--->
+### Running with Docker
 
+1. Build and start the containers:
+```bash
+docker-compose up --build
+```
+
+2. Run migrations:
+```bash
+docker-compose exec web python manage.py migrate
+```
+
+3. Create superuser:
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+
+### Docker Services
+
+The application consists of the following services:
+- `web`: Django application
+- `db`: PostgreSQL database
+- `redis`: Redis server for Celery
+- `celery_worker`: Celery worker for background tasks
+- `celery_beat`: Celery beat for scheduled tasks
+
+### Environment Variables
+
+Create a `.env` file in the project root with the following variables:
+```
+SECRET_KEY=your_secret_key
+DEBUG=True
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+POSTGRES_DB=library_db
+POSTGRES_USER=library_user
+POSTGRES_PASSWORD=library_password
+```
+
+### Useful Docker Commands
+
+- View logs:
+```bash
+docker-compose logs -f
+```
+
+- Stop all containers:
+```bash
+docker-compose down
+```
