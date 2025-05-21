@@ -164,7 +164,7 @@ celery -A library_service worker -l info
 ```
 3. Start Celery beat:
 ```bash
-celery -A library_service beat -l info
+celery -A library_service beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
 ```
 _____________________
 ## 🐳 Docker Setup
