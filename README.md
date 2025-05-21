@@ -229,4 +229,3 @@ The bot will automatically send notifications for:
 - Fine calculations
 
 No additional setup is required - the bot works automatically once configured in the environment variables.
-
