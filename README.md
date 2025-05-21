@@ -16,6 +16,8 @@ A comprehensive library management system built with Django REST Framework that 
 - Automatic inventory updates
 - Expected return date management
 - Overdue book tracking
+- Authentication required for all operations
+- Role-based access control
 
 ### Payment Integration 💳
 - Stripe payment processing
@@ -23,12 +25,14 @@ A comprehensive library management system built with Django REST Framework that 
 - Payment session management
 - Success and cancel payment flows
 - Fine calculation for overdue books
+- Secure payment handling
 
 ### User Management 👥
 - JWT authentication
 - User roles (admin/regular user)
 - Access control for different operations
 - User-specific borrowing history
+- Secure password handling
 
 ### Notifications 📢
 - Telegram bot integration
@@ -36,12 +40,15 @@ A comprehensive library management system built with Django REST Framework that 
   - New borrowings
   - Overdue books
   - Daily overdue checks
+  - Payment status updates
 
 ### Security 🛡️
 - JWT token authentication
 - Role-based access control
 - Secure payment processing
 - Environment variable management
+- Protected endpoints
+- Input validation
 
 ________________
 
@@ -92,12 +99,30 @@ cp .env.sample .env
 
 5. Fill in the environment variables in .env file:
 ```
+# Django settings
 SECRET_KEY=your_secret_key
 DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database settings
+POSTGRES_DB=library_db
+POSTGRES_USER=library_user
+POSTGRES_PASSWORD=library_password
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Stripe settings
 STRIPE_SECRET_KEY=your_stripe_secret_key
 STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Telegram settings
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_CHAT_ID=your_telegram_chat_id
+
+# Redis settings
+REDIS_HOST=redis
+REDIS_PORT=6379
 ```
 
 6. Run migrations:
@@ -120,6 +145,15 @@ ______________________
 Once the server is running, you can access the API documentation at:
 - Swagger UI: http://localhost:8000/api/schema/swagger/
 
+### Authentication
+All API endpoints require JWT authentication. To authenticate:
+1. Get a token from `/api/token/`
+2. Include the token in the Authorization header: `Authorize <your_token>`
+
+### Access Control
+- Admin users have full access to all endpoints
+- Regular users can only access their own data
+- Unauthenticated users cannot access any endpoints
 ______________________
 ## ⏱ Running with Celery
 
@@ -165,29 +199,34 @@ The application consists of the following services:
 - `celery_worker`: Celery worker for background tasks
 - `celery_beat`: Celery beat for scheduled tasks
 
-### Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+## 🤖 TG-BOT
+
+The library service includes a Telegram bot that provides real-time notifications about library activities.
+
+### Features
+- Notifications for new book borrowings
+- Alerts for overdue books
+- Daily overdue book checks
+- Payment status updates
+- Fine notifications
+
+### Setup
+1. Create a new bot using [@BotFather](https://t.me/BotFather) on Telegram
+2. Get your bot token and chat ID
+3. Add them to your `.env` file:
 ```
-SECRET_KEY=your_secret_key
-DEBUG=True
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_telegram_chat_id
-POSTGRES_DB=library_db
-POSTGRES_USER=library_user
-POSTGRES_PASSWORD=library_password
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
 ```
 
-### Useful Docker Commands
+### Usage
+The bot will automatically send notifications for:
+- New borrowing creation
+- Book returns
+- Payment completions
+- Overdue book alerts
+- Fine calculations
 
-- View logs:
-```bash
-docker-compose logs -f
-```
+No additional setup is required - the bot works automatically once configured in the environment variables.
 
-- Stop all containers:
-```bash
-docker-compose down
-```
