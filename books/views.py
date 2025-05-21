@@ -1,3 +1,6 @@
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+
 from books.models import Book
 from books.permissions import IsAdminOrReadOnly
 from books.schema_descriptions import (
@@ -22,6 +25,10 @@ class BookViewSet(ActionMixin):
         "partial_update": BookCreateSerializer,
     }
     permission_classes = [IsAdminOrReadOnly]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ["title", "author"]
+    search_fields = ["title"]
 
     @book_list_schema
     def list(self, request, *args, **kwargs):
