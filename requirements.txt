@@ -1,5 +1,6 @@
 amqp==5.3.1
 asgiref==3.8.1
+async-timeout==5.0.1
 attrs==25.3.0
 billiard==4.2.1
 celery==5.5.2
@@ -11,6 +12,7 @@ click-didyoumean==0.3.1
 click-plugins==1.1.1
 click-repl==0.3.0
 colorama==0.4.6
+coverage==7.8.0
 cron-descriptor==1.4.5
 cryptography==45.0.2
 Django==5.2.1
@@ -21,6 +23,7 @@ djangorestframework_simplejwt==5.5.0
 dotenv==0.9.9
 drf-spectacular==0.28.0
 flake8==7.2.0
+gunicorn==23.0.0
 idna==3.10
 inflection==0.5.1
 iniconfig==2.1.0
@@ -31,6 +34,8 @@ mccabe==0.7.0
 packaging==25.0
 pluggy==1.6.0
 prompt_toolkit==3.0.51
+psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pycodestyle==2.13.0
 pycparser==2.22
 pyflakes==3.3.2
@@ -41,6 +46,7 @@ python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 PyYAML==6.0.2
+redis==6.1.0
 referencing==0.36.2
 requests==2.32.3
 rpds-py==0.25.0
