@@ -53,3 +53,20 @@ stripe_webhook_schema = extend_schema(
     description="Receives webhook events from Stripe and updates payment status.",
     responses={200: None}
 )
+
+renew_payment_schema = extend_schema(
+    summary="Renew expired payment",
+    description=(
+        "Create a new payment session for an expired payment.\n\n"
+        "Validation rules:\n"
+        "- Only expired payments can be renewed\n"
+        "- User must be the borrower or an admin\n"
+        "- Original payment will be marked as expired"
+    ),
+    responses={
+        201: OpenApiTypes.OBJECT,
+        400: OpenApiTypes.OBJECT,
+        403: OpenApiTypes.OBJECT,
+        404: OpenApiTypes.OBJECT
+    },
+)
