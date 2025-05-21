@@ -26,7 +26,7 @@ media/
 
 # Virtualenv
 venv/
-.env/
+.env.sample/
 .venv/
 ENV/
 env.bak/
@@ -40,5 +40,9 @@ env/
 vol/
 
 # dotenv
+.env.sample
 .env
-.env.*
+!.env.sample
+
+
+/staticfiles/

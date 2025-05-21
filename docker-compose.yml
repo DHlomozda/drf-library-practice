@@ -1,0 +1,91 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "python manage.py migrate &&
+            python manage.py collectstatic --noinput &&
+            gunicorn library_service.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app  # hot reload
+      - static_volume:/app/static
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  bot:
+    build:
+      context: .
+    command: python -m telegram_bot.polling_bot
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+      - db
+    restart: always
+
+  db:
+    image: postgres:15
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 8s
+      timeout: 3s
+      retries: 6
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 8s
+      timeout: 3s
+      retries: 6
+
+  celery:
+    build:
+      context: .
+    command: celery -A library_service worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  beat:
+    build:
+      context: .
+    command: >
+      sh -c "echo 'Waiting for ending of migrations...' &&
+              sleep 5 &&
+              celery -A library_service beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+volumes:
+  postgres_data:
+  static_volume:
