@@ -90,19 +90,22 @@ class BorrowingSerializerTest(TestCase):
 class BorrowingViewSetTest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(first_name="Test",
-                                             last_name="User",
-                                             email="user@test.com",
-                                             password="password",
-                                             is_staff=True)
+        self.user = User.objects.create_user(
+            first_name="Test",
+            last_name="User",
+            email="user@test.com",
+            password="password",
+            is_staff=True
+        )
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-        self.book = Book.objects.create(title="Test Book",
-                                        author="Author",
-                                        inventory=10,
-                                        daily_fee=1.5,
-                                        cover="HARD"
-                                        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Authorize {refresh.access_token}")
+        self.book = Book.objects.create(
+            title="Test Book",
+            author="Author",
+            inventory=10,
+            daily_fee=1.5,
+            cover="HARD"
+        )
         self.borrowing = Borrowing.objects.create(
             expected_return_date=timezone.now() + timezone.timedelta(days=5),
             book=self.book,
