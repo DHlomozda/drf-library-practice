@@ -1,15 +1,14 @@
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
-from django.conf import settings
 
 from payment_service.models import Payment
 from payment_service.serializers import PaymentSerializer
-from payment_service.permissions import IsOwnerOrAdmin
+from payment_service.permissions import IsOwnerOrAdmin, IsAdminOrReadOnly
 from borrowings.models import Borrowing
 from books.models import Book
 from django.contrib.auth import get_user_model
@@ -178,6 +177,20 @@ class PaymentViewSetTest(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_payment_delete_regular_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(
+            reverse("payment-detail", kwargs={"pk": self.payment.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_payment_delete_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.delete(
+            reverse("payment-detail", kwargs={"pk": self.payment.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
 
 class PaymentPermissionsTest(TestCase):
     def setUp(self):
@@ -215,30 +228,49 @@ class PaymentPermissionsTest(TestCase):
             session_url="https://test.com/session",
             money_to_pay=Decimal("50.00")
         )
-        self.permission = IsOwnerOrAdmin()
+        self.owner_permission = IsOwnerOrAdmin()
+        self.admin_permission = IsAdminOrReadOnly()
 
-    def test_permission_owner(self):
+    def test_owner_permission_owner(self):
         request = type('Request', (), {'user': self.user})()
         self.assertTrue(
-            self.permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(request, None, self.payment)
         )
 
-    def test_permission_admin(self):
+    def test_owner_permission_admin(self):
         request = type('Request', (), {'user': self.admin_user})()
         self.assertTrue(
-            self.permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(request, None, self.payment)
         )
 
-    def test_permission_other_user(self):
+    def test_owner_permission_other_user(self):
         request = type('Request', (), {'user': self.other_user})()
         self.assertFalse(
-            self.permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(request, None, self.payment)
         )
 
-    def test_permission_anonymous(self):
-        request = type('Request', (), {'user': None})()
+    def test_admin_permission_safe_method(self):
+        request = type('Request', (), {'user': self.user, 'method': 'GET'})()
+        self.assertTrue(
+            self.admin_permission.has_permission(request, None)
+        )
+
+    def test_admin_permission_unsafe_method_admin(self):
+        request = type('Request', (), {'user': self.admin_user, 'method': 'DELETE'})()
+        self.assertTrue(
+            self.admin_permission.has_permission(request, None)
+        )
+
+    def test_admin_permission_unsafe_method_user(self):
+        request = type('Request', (), {'user': self.user, 'method': 'DELETE'})()
         self.assertFalse(
-            self.permission.has_permission(request, None)
+            self.admin_permission.has_permission(request, None)
+        )
+
+    def test_admin_permission_anonymous(self):
+        request = type('Request', (), {'user': None, 'method': 'GET'})()
+        self.assertFalse(
+            self.admin_permission.has_permission(request, None)
         )
 
 

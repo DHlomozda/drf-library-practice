@@ -17,16 +17,20 @@ User = get_user_model()
 class BorrowingModelTest(TestCase):
     def setUp(self):
         translation.activate('en-us')
-        self.user = User.objects.create_user(first_name="Test",
-                                             last_name="User",
-                                             email="user@test.com",
-                                             password="password",
-                                             is_staff=True)
-        self.book = Book.objects.create(title="Test Book",
-                                        author="Author",
-                                        inventory=10,
-                                        daily_fee=1.5,
-                                        cover="HARD")
+        self.user = User.objects.create_user(
+            first_name="Test",
+            last_name="User",
+            email="user@test.com",
+            password="password",
+            is_staff=True
+        )
+        self.book = Book.objects.create(
+            title="Test Book",
+            author="Author",
+            inventory=10,
+            daily_fee=1.5,
+            cover="HARD"
+        )
 
     def test_borrowing_clean_validation(self):
         now = timezone.now()
@@ -61,16 +65,20 @@ class BorrowingModelTest(TestCase):
 
 class BorrowingSerializerTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(first_name="Test",
-                                             last_name="User",
-                                             email="user@test.com",
-                                             password="password",
-                                             is_staff=True)
-        self.book = Book.objects.create(title="Test Book",
-                                        author="Author",
-                                        inventory=10,
-                                        daily_fee=1.5,
-                                        cover="HARD")
+        self.user = User.objects.create_user(
+            first_name="Test",
+            last_name="User",
+            email="user@test.com",
+            password="password",
+            is_staff=True
+        )
+        self.book = Book.objects.create(
+            title="Test Book",
+            author="Author",
+            inventory=10,
+            daily_fee=1.5,
+            cover="HARD"
+        )
         self.borrowing = Borrowing.objects.create(
             expected_return_date=timezone.now() + timezone.timedelta(days=5),
             book=self.book,
@@ -94,8 +102,11 @@ class BorrowingViewSetTest(TestCase):
             first_name="Test",
             last_name="User",
             email="user@test.com",
-            password="password",
-            is_staff=True
+            password="password"
+        )
+        self.admin_user = User.objects.create_superuser(
+            email="admin@test.com",
+            password="adminpass"
         )
         refresh = RefreshToken.for_user(self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Authorize {refresh.access_token}")
@@ -128,6 +139,15 @@ class BorrowingViewSetTest(TestCase):
         response = self.client.get(f"/api/borrowings/{self.borrowing.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.borrowing.id)
+
+    def test_borrowing_delete_regular_user(self):
+        response = self.client.delete(f"/api/borrowings/{self.borrowing.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_borrowing_delete_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.delete(f"/api/borrowings/{self.borrowing.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class BorrowingCreateSerializerTestCase(TestCase):
