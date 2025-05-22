@@ -13,5 +13,5 @@ def go_to_bot(request):
     telegram_bot_username = os.getenv(
         "TELEGRAM_BOT_USERNAME",
         "BorrowingBookBot"
-    )  # TO-DO 'telegram_bot_username' is assigned to but never used
-    return Response({"bot_link": "https://t.me/BorrowingBookBot"})
+    )
+    return Response({"bot_link": f"https://t.me/{telegram_bot_username}"})
