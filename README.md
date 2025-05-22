@@ -166,6 +166,14 @@ celery -A library_service worker -l info
 ```bash
 celery -A library_service beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
 ```
+4. Add a periodic task via admin panel:
+   - Go to **Periodic tasks → Add**
+   - Set a name
+   - Choose task: `borrowings.tasks.check_overdue_borrowings`
+   - Select schedule:
+     - **Crontab** → set specific time (e.g., minute: `0`, hour: `9` for 09:00 daily)
+     - **Interval** → set fixed interval (e.g., every 24 hours)
+   - Save the task
 _____________________
 ## 🐳 Docker Setup
 
