@@ -145,14 +145,31 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     @borrowing_return_schema
     def return_book(self, request, pk=None):
         borrowing = self.get_object()
+        
         if borrowing.actual_return_date:
             return Response(
                 {"detail": "This book has already been returned."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+            
+        payment = Payment.objects.filter(
+            borrowing=borrowing,
+            type=Payment.Type.PAYMENT,
+            status=Payment.Status.PAID
+        ).first()
+        
+        if not payment:
+            return Response(
+                {"detail": "Payment must be completed before returning the book."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-        borrowing.actual_return_date = timezone.now()
+        borrowing.actual_return_date = datetime.now(timezone.utc)
         borrowing.save()
+
+        book = borrowing.book
+        book.inventory += 1
+        book.save()
 
         if borrowing.actual_return_date > borrowing.expected_return_date:
             days_overdue = (

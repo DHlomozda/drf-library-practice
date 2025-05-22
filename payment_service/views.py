@@ -117,6 +117,15 @@ class PaymentSuccessView(APIView):
             if session.payment_status == 'paid':
                 payment.status = Payment.Status.PAID
                 payment.save()
+
+                if payment.type == Payment.Type.PAYMENT and not payment.borrowing.actual_return_date:
+                    borrowing = payment.borrowing
+                    borrowing.actual_return_date = datetime.now(timezone.utc)
+                    borrowing.save()
+                    
+                    book = borrowing.book
+                    book.inventory += 1
+                    book.save()
                 
                 message = (
                     f"Payment completed successfully!\n"
