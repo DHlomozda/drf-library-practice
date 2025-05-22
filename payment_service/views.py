@@ -16,8 +16,11 @@ from telegram_bot.telegram import send_telegram_message
 from borrowings.models import Borrowing
 from payment_service.models import Payment
 from payment_service.serializers import PaymentSerializer
-from payment_service.permissions import IsOwnerOrAdmin
-from payment_service.stripe_service import create_stripe_checkout_session, StripeSessionError
+from payment_service.permissions import IsAdminOrReadOnly
+from payment_service.stripe_service import (
+    create_stripe_checkout_session,
+    StripeSessionError
+)
 
 from payment_service.schema_descriptions import (
     payment_list_schema,
@@ -30,14 +33,14 @@ from payment_service.schema_descriptions import (
 )
 
 
-class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
+class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["status", "id"]
-    search_fields =  ["status", "id"]
+    search_fields = ["status", "id"]
 
     @payment_list_schema
     def list(self, request, *args, **kwargs):
@@ -109,7 +112,10 @@ class PaymentSuccessView(APIView):
     def get(self, request, payment_id):
         payment = get_object_or_404(Payment, id=payment_id)
 
-        if payment.borrowing.user != request.user and not request.user.is_staff:
+        if (
+                payment.borrowing.user != request.user
+                and not request.user.is_staff
+        ):
             return Response({"detail": "Not allowed."}, status=403)
 
         try:
@@ -117,7 +123,18 @@ class PaymentSuccessView(APIView):
             if session.payment_status == 'paid':
                 payment.status = Payment.Status.PAID
                 payment.save()
-                
+
+                if (
+                        payment.type == Payment.Type.PAYMENT
+                        and not payment.borrowing.actual_return_date
+                ):
+                    borrowing = payment.borrowing
+                    borrowing.actual_return_date = datetime.now(timezone.utc)
+                    borrowing.save()
+                    book = borrowing.book
+                    book.inventory += 1
+                    book.save()
+
                 message = (
                     f"Payment completed successfully!\n"
                     f"Borrowing ID: #{payment.borrowing.id}\n"
@@ -126,7 +143,7 @@ class PaymentSuccessView(APIView):
                     f"Date: {payment.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 send_telegram_message(message)
-                
+
                 return Response({
                     "status": "success",
                     "message": "Payment completed successfully"
@@ -192,7 +209,10 @@ class RenewPaymentView(APIView):
     def post(self, request, payment_id):
         payment = get_object_or_404(Payment, id=payment_id)
 
-        if payment.borrowing.user != request.user and not request.user.is_staff:
+        if (
+                payment.borrowing.user != request.user
+                and not request.user.is_staff
+        ):
             return Response({"detail": "Not allowed."}, status=403)
 
         if payment.status != Payment.Status.EXPIRED:

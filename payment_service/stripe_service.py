@@ -24,16 +24,13 @@ def create_stripe_checkout_session(
 ) -> Payment:
     """
     Create a Stripe checkout session for payment.
-    
     Args:
         borrowing: The borrowing instance
         amount: The amount to charge
         payment_type: Type of payment (PAYMENT or FINE)
         request: The request object for building absolute URLs
-        
     Returns:
         Payment: Created payment instance
-        
     Raises:
         StripeSessionError: If there's an error creating the Stripe session
         ValidationError: If input validation fails
@@ -46,7 +43,9 @@ def create_stripe_checkout_session(
 
     user_email = borrowing.user.email if borrowing.user else None
     if not user_email:
-        raise ValidationError("User email is required for creating payment session")
+        raise ValidationError(
+            "User email is required for creating payment session"
+        )
 
     try:
         payment = Payment.objects.create(
@@ -83,7 +82,7 @@ def create_stripe_checkout_session(
             success_url=success_url,
             cancel_url=cancel_url,
             customer_email=user_email,
-            expires_at=int((datetime.now(timezone.utc) + timedelta(hours=23)).timestamp()),
+            expires_at=int((datetime.now(timezone.utc) + timedelta(hours=23)).timestamp()),  # noqa
         )
 
         payment.session_id = session.id
@@ -92,10 +91,13 @@ def create_stripe_checkout_session(
 
     except stripe.error.StripeError as e:
         payment.delete()
-        raise StripeSessionError(f"Failed to create Stripe session: {str(e)}")
+        raise StripeSessionError(
+            f"Failed to create Stripe session: {str(e)}"
+        )
     except Exception as e:
         payment.delete()
-        raise StripeSessionError(f"Unexpected error creating Stripe session: {str(e)}")
+        raise StripeSessionError(
+            f"Unexpected error creating Stripe session: {str(e)}"
+        )
 
     return payment
-
