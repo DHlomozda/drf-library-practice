@@ -1,11 +1,10 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime, timezone
-from django.conf import settings
-from django.db.models import Q
+
 
 from borrowings.models import Borrowing
 from borrowings.serializers import (
@@ -25,11 +24,12 @@ from borrowings.permissions import IsOwnerOrAdmin
 from payment_service.stripe_service import create_stripe_checkout_session
 from payment_service.models import Payment
 from telegram_bot.telegram import send_telegram_message
+from payment_service.permissions import IsAdminOrReadOnly
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
-    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin, IsAdminOrReadOnly]
 
     @borrowing_list_schema
     def list(self, request, *args, **kwargs):

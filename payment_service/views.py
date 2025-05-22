@@ -16,7 +16,7 @@ from telegram_bot.telegram import send_telegram_message
 from borrowings.models import Borrowing
 from payment_service.models import Payment
 from payment_service.serializers import PaymentSerializer
-from payment_service.permissions import IsOwnerOrAdmin
+from payment_service.permissions import IsAdminOrReadOnly
 from payment_service.stripe_service import create_stripe_checkout_session, StripeSessionError
 
 from payment_service.schema_descriptions import (
@@ -30,10 +30,10 @@ from payment_service.schema_descriptions import (
 )
 
 
-class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
+class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["status", "id"]
