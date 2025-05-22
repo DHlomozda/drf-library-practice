@@ -59,7 +59,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         user = self.request.user
         user_id = self.request.query_params.get("user_id")
         is_active = self.request.query_params.get("is_active")
-        
+
         if user.is_staff:
             queryset = queryset.filter(
                 user_id=user_id
