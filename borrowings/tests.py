@@ -7,7 +7,10 @@ from django.utils.timezone import now
 from borrowings.models import Borrowing
 from books.models import Book
 from django.contrib.auth import get_user_model
-from borrowings.serializers import BorrowingReadSerializer, BorrowingCreateSerializer
+from borrowings.serializers import (
+    BorrowingReadSerializer,
+    BorrowingCreateSerializer
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import translation
 
@@ -59,7 +62,11 @@ class BorrowingModelTest(TestCase):
             book=self.book,
             user=self.user
         )
-        expected_str = f"{self.user.email} borrowed {self.book.title} on {borrowing.borrow_date}"
+        expected_str = (
+            f"{self.user.email} "
+            f"borrowed {self.book.title} "
+            f"on {borrowing.borrow_date}"
+        )
         self.assertEqual(str(borrowing), expected_str)
 
 
@@ -95,6 +102,7 @@ class BorrowingSerializerTest(TestCase):
         self.assertIn("book", data)
         self.assertEqual(data["book"]["title"], self.book.title)
 
+
 class BorrowingViewSetTest(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -109,7 +117,9 @@ class BorrowingViewSetTest(TestCase):
             password="adminpass"
         )
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Authorize {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Authorize {refresh.access_token}"
+        )
         self.book = Book.objects.create(
             title="Test Book",
             author="Author",

@@ -13,6 +13,7 @@ from borrowings.models import Borrowing
 from books.models import Book
 from django.contrib.auth import get_user_model
 
+
 User = get_user_model()
 
 
@@ -46,11 +47,26 @@ class PaymentModelTest(TestCase):
             status=Payment.Status.PENDING,
             type=Payment.Type.PAYMENT
         )
-        self.assertEqual(payment.borrowing, self.borrowing)
-        self.assertEqual(payment.session_id, "test_session_id")
-        self.assertEqual(payment.money_to_pay, Decimal("50.00"))
-        self.assertEqual(payment.status, Payment.Status.PENDING)
-        self.assertEqual(payment.type, Payment.Type.PAYMENT)
+        self.assertEqual(
+            payment.borrowing,
+            self.borrowing
+        )
+        self.assertEqual(
+            payment.session_id,
+            "test_session_id"
+        )
+        self.assertEqual(
+            payment.money_to_pay,
+            Decimal("50.00")
+        )
+        self.assertEqual(
+            payment.status,
+            Payment.Status.PENDING
+        )
+        self.assertEqual(
+            payment.type,
+            Payment.Type.PAYMENT
+        )
 
     def test_payment_str(self):
         payment = Payment.objects.create(
@@ -59,8 +75,14 @@ class PaymentModelTest(TestCase):
             session_url="https://test.com/session",
             money_to_pay=Decimal("50.00")
         )
-        expected_str = f"Payment {payment.status} for borrowing {self.borrowing.id}"
-        self.assertEqual(str(payment), expected_str)
+        expected_str = (
+            f"Payment {payment.status} "
+            f"for borrowing {self.borrowing.id}"
+        )
+        self.assertEqual(
+            str(payment),
+            expected_str
+        )
 
 
 class PaymentSerializerTest(TestCase):
@@ -91,15 +113,37 @@ class PaymentSerializerTest(TestCase):
         )
 
     def test_payment_serializer(self):
-        serializer = PaymentSerializer(self.payment)
+        serializer = PaymentSerializer(
+            self.payment
+        )
         data = serializer.data
-        self.assertEqual(data["id"], self.payment.id)
-        self.assertEqual(data["status"], self.payment.status)
-        self.assertEqual(data["type"], self.payment.type)
-        self.assertEqual(data["borrowing"], self.borrowing.id)
-        self.assertEqual(data["session_url"], self.payment.session_url)
-        self.assertEqual(data["session_id"], self.payment.session_id)
-        self.assertEqual(Decimal(data["money_to_pay"]), self.payment.money_to_pay)
+        self.assertEqual(
+            data["id"], self.payment.id
+        )
+        self.assertEqual(
+            data["status"],
+            self.payment.status
+        )
+        self.assertEqual(
+            data["type"],
+            self.payment.type
+        )
+        self.assertEqual(
+            data["borrowing"],
+            self.borrowing.id
+        )
+        self.assertEqual(
+            data["session_url"],
+            self.payment.session_url
+        )
+        self.assertEqual(
+            data["session_id"],
+            self.payment.session_id
+        )
+        self.assertEqual(
+            Decimal(data["money_to_pay"]),
+            self.payment.money_to_pay
+        )
 
 
 class PaymentViewSetTest(TestCase):
@@ -135,34 +179,74 @@ class PaymentViewSetTest(TestCase):
         )
 
     def test_payment_list_unauthorized(self):
-        response = self.client.get(reverse("payment-list"))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.get(
+            reverse("payment-list")
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_401_UNAUTHORIZED
+        )
 
     def test_payment_list_authorized(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(reverse("payment-list"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.client.force_authenticate(
+            user=self.user
+        )
+        response = self.client.get(
+            reverse("payment-list")
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            len(response.data),
+            1
+        )
 
     def test_payment_list_admin(self):
-        self.client.force_authenticate(user=self.admin_user)
-        response = self.client.get(reverse("payment-list"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.client.force_authenticate(
+            user=self.admin_user
+        )
+        response = self.client.get(
+            reverse("payment-list")
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            len(response.data),
+            1
+        )
 
     def test_payment_detail_unauthorized(self):
         response = self.client.get(
-            reverse("payment-detail", kwargs={"pk": self.payment.id})
+            reverse(
+                "payment-detail",
+                kwargs={"pk": self.payment.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_401_UNAUTHORIZED
+        )
 
     def test_payment_detail_authorized(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("payment-detail", kwargs={"pk": self.payment.id})
+            reverse(
+                "payment-detail",
+                kwargs={"pk": self.payment.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], self.payment.id)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data["id"],
+            self.payment.id
+        )
 
     def test_payment_detail_wrong_user(self):
         other_user = User.objects.create_user(
@@ -171,25 +255,49 @@ class PaymentViewSetTest(TestCase):
             first_name="Other",
             last_name="User"
         )
-        self.client.force_authenticate(user=other_user)
-        response = self.client.get(
-            reverse("payment-detail", kwargs={"pk": self.payment.id})
+        self.client.force_authenticate(
+            user=other_user
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.get(
+            reverse(
+                "payment-detail",
+                kwargs={"pk": self.payment.id}
+            )
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND
+        )
 
     def test_payment_delete_regular_user(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.delete(
-            reverse("payment-detail", kwargs={"pk": self.payment.id})
+        self.client.force_authenticate(
+            user=self.user
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.delete(
+            reverse(
+                "payment-detail",
+                kwargs={"pk": self.payment.id}
+            )
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN
+        )
 
     def test_payment_delete_admin(self):
-        self.client.force_authenticate(user=self.admin_user)
-        response = self.client.delete(
-            reverse("payment-detail", kwargs={"pk": self.payment.id})
+        self.client.force_authenticate(
+            user=self.admin_user
         )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        response = self.client.delete(
+            reverse(
+                "payment-detail",
+                kwargs={"pk": self.payment.id}
+            )
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_204_NO_CONTENT
+        )
 
 
 class PaymentPermissionsTest(TestCase):
@@ -232,45 +340,93 @@ class PaymentPermissionsTest(TestCase):
         self.admin_permission = IsAdminOrReadOnly()
 
     def test_owner_permission_owner(self):
-        request = type('Request', (), {'user': self.user})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.user}
+        )()
         self.assertTrue(
-            self.owner_permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(
+                request,
+                None,
+                self.payment
+            )
         )
 
     def test_owner_permission_admin(self):
-        request = type('Request', (), {'user': self.admin_user})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.admin_user}
+        )()
         self.assertTrue(
-            self.owner_permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(
+                request,
+                None,
+                self.payment
+            )
         )
 
     def test_owner_permission_other_user(self):
-        request = type('Request', (), {'user': self.other_user})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.other_user}
+        )()
         self.assertFalse(
-            self.owner_permission.has_object_permission(request, None, self.payment)
+            self.owner_permission.has_object_permission(
+                request,
+                None,
+                self.payment
+            )
         )
 
     def test_admin_permission_safe_method(self):
-        request = type('Request', (), {'user': self.user, 'method': 'GET'})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.user, 'method': 'GET'}
+        )()
         self.assertTrue(
-            self.admin_permission.has_permission(request, None)
+            self.admin_permission.has_permission(
+                request,
+                None
+            )
         )
 
     def test_admin_permission_unsafe_method_admin(self):
-        request = type('Request', (), {'user': self.admin_user, 'method': 'DELETE'})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.admin_user, 'method': 'DELETE'}
+        )()
         self.assertTrue(
-            self.admin_permission.has_permission(request, None)
+            self.admin_permission.has_permission(
+                request,
+                None
+            )
         )
 
     def test_admin_permission_unsafe_method_user(self):
-        request = type('Request', (), {'user': self.user, 'method': 'DELETE'})()
+        request = type(
+            'Request',
+            (),
+            {'user': self.user, 'method': 'DELETE'}
+        )()
         self.assertFalse(
-            self.admin_permission.has_permission(request, None)
+            self.admin_permission.has_permission(
+                request,
+                None
+            )
         )
 
     def test_admin_permission_anonymous(self):
         request = type('Request', (), {'user': None, 'method': 'GET'})()
         self.assertFalse(
-            self.admin_permission.has_permission(request, None)
+            self.admin_permission.has_permission(
+                request,
+                None
+            )
         )
 
 
@@ -303,9 +459,15 @@ class PaymentProcessingTest(TestCase):
     @patch('payment_service.stripe_service.stripe.checkout.Session.create')
     def test_start_payment_unauthorized(self, mock_create):
         response = self.client.post(
-            reverse("start-payment", kwargs={"borrowing_id": self.borrowing.id})
+            reverse(
+                "start-payment",
+                kwargs={"borrowing_id": self.borrowing.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_401_UNAUTHORIZED
+        )
 
     @patch('payment_service.stripe_service.stripe.checkout.Session.create')
     def test_start_payment_authorized(self, mock_create):
@@ -316,12 +478,27 @@ class PaymentProcessingTest(TestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("start-payment", kwargs={"borrowing_id": self.borrowing.id})
+            reverse(
+                "start-payment",
+                kwargs={"borrowing_id": self.borrowing.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("payment_id", response.data)
-        self.assertIn("checkout_url", response.data)
-        self.assertEqual(response.data["checkout_url"], "https://test.com/session")
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+        self.assertIn(
+            "payment_id",
+            response.data
+        )
+        self.assertIn(
+            "checkout_url",
+            response.data
+        )
+        self.assertEqual(
+            response.data["checkout_url"],
+            "https://test.com/session"
+        )
 
     @patch('payment_service.stripe_service.stripe.checkout.Session.create')
     def test_start_payment_wrong_user(self, mock_create):
@@ -333,7 +510,10 @@ class PaymentProcessingTest(TestCase):
         )
         self.client.force_authenticate(user=other_user)
         response = self.client.post(
-            reverse("start-payment", kwargs={"borrowing_id": self.borrowing.id})
+            reverse(
+                "start-payment",
+                kwargs={"borrowing_id": self.borrowing.id}
+            )
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -351,12 +531,24 @@ class PaymentProcessingTest(TestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("payment-success", kwargs={"payment_id": payment.id})
+            reverse(
+                "payment-success",
+                kwargs={"payment_id": payment.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "success")
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data["status"],
+            "success"
+        )
         payment.refresh_from_db()
-        self.assertEqual(payment.status, Payment.Status.PAID)
+        self.assertEqual(
+            payment.status,
+            Payment.Status.PAID
+        )
 
     @patch('payment_service.stripe_service.stripe.checkout.Session.retrieve')
     def test_payment_success_pending(self, mock_retrieve):
@@ -372,15 +564,37 @@ class PaymentProcessingTest(TestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("payment-success", kwargs={"payment_id": payment.id})
+            reverse(
+                "payment-success",
+                kwargs={"payment_id": payment.id}
+            )
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "pending")
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data["status"],
+            "pending"
+        )
         payment.refresh_from_db()
-        self.assertEqual(payment.status, Payment.Status.PENDING)
+        self.assertEqual(
+            payment.status,
+            Payment.Status.PENDING
+        )
 
     def test_payment_cancel(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(reverse("payment-cancel"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "cancelled") 
+        self.client.force_authenticate(
+            user=self.user
+        )
+        response = self.client.get(
+            reverse("payment-cancel")
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+        self.assertEqual(
+            response.data["status"],
+            "cancelled"
+        )

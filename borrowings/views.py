@@ -61,12 +61,18 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         is_active = self.request.query_params.get("is_active")
         
         if user.is_staff:
-            queryset = queryset.filter(user_id=user_id) if user_id else queryset
+            queryset = queryset.filter(
+                user_id=user_id
+            ) if user_id else queryset
 
         if is_active and is_active.lower() == "true":
-            queryset = queryset.filter(actual_return_date__isnull=True)
+            queryset = queryset.filter(
+                actual_return_date__isnull=True
+            )
 
-        return queryset if user.is_staff else queryset.filter(user=user)
+        return queryset if user.is_staff else queryset.filter(
+            user=user
+        )
 
     @borrowing_create_schema
     def create(self, request, *args, **kwargs):
@@ -75,12 +81,12 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 {"detail": "Authentication credentials were not provided."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
+
         pending_payments = Payment.objects.filter(
             borrowing__user=request.user,
             status__in=[Payment.Status.PENDING, Payment.Status.EXPIRED]
         )
-        
+
         if pending_payments.exists():
             return Response(
                 {
@@ -89,7 +95,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
         return super().create(request, *args, **kwargs)
 
     @borrowing_update_schema
@@ -106,17 +112,20 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         borrowing = serializer.save(user=self.request.user)
-        
+
         book = borrowing.book
         book.inventory -= 1
         book.save()
-        
-        days_rented = (borrowing.expected_return_date - borrowing.borrow_date).days
+
+        days_rented = (
+            borrowing.expected_return_date - borrowing.borrow_date
+        ).days
+
         if days_rented <= 0:
             days_rented = 1
-            
+
         amount = borrowing.book.daily_fee * days_rented
-        
+
         create_stripe_checkout_session(
             borrowing=borrowing,
             amount=amount,
@@ -128,8 +137,10 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             f"📚 <b>New Borrowing Created</b>\n"
             f"👤 User: {borrowing.user.email}\n"
             f"📖 Book: {borrowing.book.title}\n"
-            f"📅 Borrow Date: {borrowing.borrow_date.strftime('%Y-%m-%d %H:%M')}\n"
-            f"📅 Expected Return: {borrowing.expected_return_date.strftime('%Y-%m-%d %H:%M')}\n"
+            f"📅 Borrow Date: "
+            f"{borrowing.borrow_date.strftime('%Y-%m-%d %H:%M')}\n"
+            f"📅 Expected Return: "
+            f"{borrowing.expected_return_date.strftime('%Y-%m-%d %H:%M')}\n"
             f"💰 Amount: ${amount:.2f}"
         )
         send_telegram_message(message)
@@ -143,22 +154,26 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     @borrowing_return_schema
     def return_book(self, request, pk=None):
         borrowing = self.get_object()
-        
+
         if borrowing.actual_return_date:
             return Response(
                 {"detail": "This book has already been returned."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-            
+
         payment = Payment.objects.filter(
             borrowing=borrowing,
             type=Payment.Type.PAYMENT,
             status=Payment.Status.PAID
         ).first()
-        
+
         if not payment:
             return Response(
-                {"detail": "Payment must be completed before returning the book."},
+                {
+                    "detail":
+                    "Payment must be completed "
+                    "before returning the book."
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -184,7 +199,8 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 )
                 return Response(
                     {
-                        "detail": "Book returned successfully. A fine has been issued for late return.",
+                        "detail": "Book returned successfully. "
+                                  "A fine has been issued for late return.",
                         "fine_payment_id": payment.id,
                         "fine_amount": fine_amount,
                         "checkout_url": payment.session_url,
