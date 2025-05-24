@@ -41,6 +41,7 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
         book = attrs.get("book")
         if book.inventory <= 0:
             raise serializers.ValidationError({
-                'book': "Sorry, the book is currently unavailable for borrowing"
+                'book': "Sorry, the book is currently"
+                        " unavailable for borrowing"
             })
         return attrs

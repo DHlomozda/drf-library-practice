@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from telegram_bot import views
 
 app_name = "telegram_bot"
 urlpatterns = [

@@ -29,7 +29,8 @@ borrowing_list_schema = extend_schema(
             name="is_active",
             type=OpenApiTypes.BOOL,
             location=OpenApiParameter.QUERY,
-            description="Filter borrowings by active status (true = not returned)",
+            description="Filter borrowings by active "
+                        "status (true = not returned)",
         ),
     ],
     responses={
@@ -136,7 +137,9 @@ borrowing_return_schema = extend_schema(
         "Permissions:\n"
         "- Admins can return any book\n"
         "- Regular users can only return their own books\n\n"
-        "Note: If the book is returned late, a fine will be automatically calculated and a payment session will be created."
+        "Note: If the book is returned late, "
+        "a fine will be automatically calculated "
+        "and a payment session will be created."
     ),
     responses={
         200: OpenApiTypes.OBJECT,

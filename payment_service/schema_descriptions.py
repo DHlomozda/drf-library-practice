@@ -50,7 +50,8 @@ payment_cancel_schema = extend_schema(
 
 stripe_webhook_schema = extend_schema(
     summary="Stripe webhook handler",
-    description="Receives webhook events from Stripe and updates payment status.",
+    description="Receives webhook events from "
+                "Stripe and updates payment status.",
     responses={200: None}
 )
 

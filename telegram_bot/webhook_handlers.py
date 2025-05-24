@@ -30,7 +30,10 @@
 #         email = parts[1].strip()
 #
 #         if not re.match(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
-#             send_telegram_message("❌ Невірний формат email. Спробуйте ще раз.", chat_id)
+#             send_telegram_message(
+#             "❌ Невірний формат email. Спробуйте ще раз.",
+#             chat_id
+#             )
 #             return
 #
 #         try:
@@ -41,7 +44,10 @@
 #                 chat_id
 #             )
 #         except User.DoesNotExist:
-#             send_telegram_message("❌ Користувача з таким email не знайдено.", chat_id)
+#             send_telegram_message(
+#             "❌ Користувача з таким email не знайдено.",
+#             chat_id
+#             )
 #         return
 #
 #     # Якщо команда має неправильний формат (більше 2 частин)

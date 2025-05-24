@@ -21,6 +21,7 @@ def check_overdue_borrowings():
             f"📚 <b>Overdue Borrowing</b>\n"
             f"👤 User: {obj.user.email}\n"
             f"📖 Book: {obj.book.title}\n"
-            f"📅 Expected Return: {obj.expected_return_date.strftime('%Y-%m-%d %H:%M')}"
+            f"📅 Expected Return: "
+            f"{obj.expected_return_date.strftime('%Y-%m-%d %H:%M')}"
         )
         send_telegram_message(message)
